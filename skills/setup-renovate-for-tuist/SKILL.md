@@ -389,6 +389,9 @@ jobs:
         with:
           configurationFile: renovate.json
           token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          LOG_LEVEL: 'debug'
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
 ```
 
 **2.** Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope) if not already set.
