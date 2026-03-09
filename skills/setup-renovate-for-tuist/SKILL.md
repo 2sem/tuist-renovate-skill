@@ -317,7 +317,7 @@ renovate --version
 **Run the dry-run:**
 
 ```bash
-RENOVATE_TOKEN=<github-pat> renovate --dry-run=full <org>/<repo>
+RENOVATE_GITHUB_TOKEN=<github-pat> renovate --dry-run=full <org>/<repo>
 ```
 
 A GitHub PAT with `repo` scope is required. Ask the user to provide it if not already available in the environment.
@@ -389,7 +389,7 @@ jobs:
       - uses: renovatebot/github-action@<latest-version>
         with:
           configurationFile: renovate.json
-          token: ${{ secrets.RENOVATE_TOKEN }}
+          token: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
         env:
           LOG_LEVEL: 'debug'
           RENOVATE_REPOSITORIES: ${{ github.repository }}
@@ -399,7 +399,7 @@ jobs:
 
 Once the user confirms it works, uncomment the `schedule` block and push the change.
 
-**3.** Set `RENOVATE_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
+**3.** Set `RENOVATE_GITHUB_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
 
 **Fine-grained personal access token** — requires these permissions (set token lifetime to ≤ 366 days — some organizations such as `tuist` enforce this limit and will reject tokens with longer lifetimes):
 - Administration: Read-only
@@ -443,4 +443,4 @@ After merging:
 - [ ] Branch dependencies excluded or disabled
 - [ ] `renovate --dry-run` confirms all expected packages are detected
 - [ ] Renovate GitHub App installed OR `.github/workflows/renovate.yml` created
-- [ ] `RENOVATE_TOKEN` secret set (self-hosted only)
+- [ ] `RENOVATE_GITHUB_TOKEN` secret set (self-hosted only)
