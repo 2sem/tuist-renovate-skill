@@ -345,7 +345,20 @@ No additional files needed.
 
 ### Option B: Self-hosted via GitHub Actions
 
-Create `.github/workflows/renovate.yml`:
+**1. Check for an existing Renovate workflow:**
+
+```bash
+ls .github/workflows/
+```
+
+Search for any workflow file that already references Renovate:
+
+```bash
+grep -rl "renovate" .github/workflows/
+```
+
+- **If a Renovate workflow already exists** — show its contents to the user and ask whether to update the schedule/token or leave it as-is. Do not create a new file.
+- **If no Renovate workflow exists** — create `.github/workflows/renovate.yml`:
 
 ```yaml
 name: Renovate
@@ -366,7 +379,7 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
 ```
 
-Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope).
+**2.** Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope) if not already set.
 
 ## Step 8 — Verify
 
