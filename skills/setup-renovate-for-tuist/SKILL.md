@@ -394,7 +394,17 @@ jobs:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
 ```
 
-**2.** Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope) if not already set.
+**2.** Set `RENOVATE_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
+
+**Fine-grained personal access token** — requires these permissions:
+- Administration: Read-only
+- Contents: Read and write
+- Issues: Read and write
+- Metadata: Read-only (auto-granted)
+- Pull requests: Read and write
+
+**Classic personal access token** — requires:
+- `repo` (full read/write)
 
 > For additional self-hosted configuration options (autodiscover, git author, PR limits, etc.), refer to the [Renovate self-hosted configuration docs](https://docs.renovatebot.com/self-hosted-configuration/). Ask the user if they need any of these before finalising the workflow.
 
