@@ -358,7 +358,15 @@ grep -rl "renovate" .github/workflows/
 ```
 
 - **If a Renovate workflow already exists** — show its contents to the user and ask whether to update the schedule/token or leave it as-is. Do not create a new file.
-- **If no Renovate workflow exists** — create `.github/workflows/renovate.yml`:
+- **If no Renovate workflow exists** — before creating the file, check the latest release tag of `renovatebot/github-action`:
+
+```bash
+gh release list --repo renovatebot/github-action --limit 1
+```
+
+Use the major version from that tag (e.g. if latest is `v40.3.2`, use `renovatebot/github-action@v40.3.2`). Do not use a bare major tag like `@v40` as it may not exist.
+
+Then create `.github/workflows/renovate.yml`:
 
 ```yaml
 name: Renovate
@@ -377,7 +385,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: renovatebot/github-action@v40
+      - uses: renovatebot/github-action@<latest-version>
         with:
           configurationFile: renovate.json
           token: ${{ secrets.RENOVATE_TOKEN }}
