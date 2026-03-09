@@ -1,6 +1,6 @@
 # tuist-renovate-skill
 
-A Claude Code skill for setting up [Renovate](https://renovatebot.com/) automated dependency updates on [Tuist](https://tuist.io/) iOS projects.
+Sets up [Renovate](https://renovatebot.com/) automated dependency updates for [Tuist](https://tuist.io/) iOS projects — available as a Claude Code skill or as a standalone guide for any AI assistant.
 
 ## What it does
 
