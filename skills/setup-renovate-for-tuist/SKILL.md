@@ -62,7 +62,24 @@ Also note any packages using `requirement: .branch("...")` — these cannot be t
 
 Check if `mise.toml` exists in the project root. If yes, Renovate can also update tool versions (tuist, swiftlint, etc.) automatically.
 
-## Step 4 — Create renovate.json
+## Step 4 — Ask for Schedule Preference
+
+Ask the user: *"When would you like Renovate to check for updates? (e.g. 'every Monday morning', 'weekly on Friday', 'daily')"*
+
+Use the answer to set the `schedule` field in `renovate.json`. Renovate uses natural language scheduling:
+
+| User preference | Renovate schedule value |
+|----------------|------------------------|
+| Monday morning | `"before 9am on monday"` |
+| Friday afternoon | `"after 2pm on friday"` |
+| Weekly (any) | `"once a week"` |
+| Daily | `"every day"` |
+
+Full syntax reference: https://docs.renovatebot.com/configuration-options/#schedule
+
+If using a self-hosted GitHub Actions workflow, also convert the chosen schedule to a matching cron expression.
+
+## Step 5 — Create renovate.json
 
 Create `renovate.json` in the project root based on the detected configuration.
 
@@ -80,7 +97,7 @@ The Renovate Swift manager natively handles `Package.swift` files. The default p
     {
       "matchManagers": ["swift"],
       "groupName": "Swift dependencies",
-      "schedule": ["before 9am on monday"]
+      "schedule": ["<schedule>"]
     }
   ]
 }
@@ -127,7 +144,7 @@ Use two managers (releases + tags) as fallback since some packages only publish 
     {
       "matchManagers": ["custom.regex"],
       "groupName": "Swift dependencies",
-      "schedule": ["before 9am on monday"]
+      "schedule": ["<schedule>"]
     }
   ]
 }
@@ -195,7 +212,7 @@ Use two managers (releases + tags) as fallback:
     {
       "matchManagers": ["custom.regex"],
       "groupName": "Swift dependencies",
-      "schedule": ["before 9am on monday"]
+      "schedule": ["<schedule>"]
     }
   ]
 }
@@ -241,7 +258,7 @@ If `mise.toml` exists, add `mise` to `enabledManagers`:
     {
       "matchManagers": ["mise"],
       "groupName": "Dev tools",
-      "schedule": ["before 9am on monday"]
+      "schedule": ["<schedule>"]
     }
   ]
 }
@@ -284,7 +301,7 @@ And these top-level options to prevent PR floods:
 }
 ```
 
-## Step 5 — Dry-run Verification
+## Step 6 — Dry-run Verification
 
 Run a local dry-run to confirm the `renovate.json` detects the expected packages before merging.
 
@@ -315,7 +332,7 @@ A GitHub PAT with `repo` scope is required. Ask the user to provide it if not al
 - Test the failing `matchStrings` pattern directly
 - Common culprits: multiline declaration not matched by `[\s\S]*?`, unhandled requirement type (e.g. `.upToNextMinor`, `.exact`)
 
-## Step 6 — Enable Renovate
+## Step 7 — Enable Renovate
 
 Choose one of the two approaches:
 
@@ -335,7 +352,7 @@ name: Renovate
 
 on:
   schedule:
-    - cron: '0 8 * * 1'  # Every Monday at 8am UTC
+    - cron: '<cron expression matching chosen schedule>'
   workflow_dispatch:
 
 jobs:
@@ -351,7 +368,7 @@ jobs:
 
 Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope).
 
-## Step 7 — Verify
+## Step 8 — Verify
 
 After merging:
 - Renovate creates a **Configure Renovate** PR (if using GitHub App) — merge it
