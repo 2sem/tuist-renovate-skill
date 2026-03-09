@@ -396,7 +396,7 @@ jobs:
 
 **2.** Set `RENOVATE_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
 
-**Fine-grained personal access token** — requires these permissions:
+**Fine-grained personal access token** — requires these permissions (set token lifetime to ≤ 366 days — some organizations such as `tuist` enforce this limit and will reject tokens with longer lifetimes):
 - Administration: Read-only
 - Contents: Read and write
 - Issues: Read and write
@@ -427,6 +427,7 @@ After merging:
 | Renovate opens too many PRs at once | Add `"prConcurrentLimit": 3` to `renovate.json` |
 | Package updates break build | Add `"automerge": false` (it's the default — confirm it's not set to `true`) |
 | Renovate scan is very slow | Add `"enabledManagers": ["custom.regex"]` to skip irrelevant built-in managers |
+| `Datasource unknown error` for `tuist/tuist` with fine-grained PAT | The `tuist` org forbids fine-grained PATs with lifetime > 366 days — shorten the token expiry or switch to a classic PAT with `repo` scope |
 
 ## Done Checklist
 
