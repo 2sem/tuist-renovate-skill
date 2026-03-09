@@ -281,20 +281,34 @@ And these top-level options to prevent PR floods:
 
 ## Step 5 — Dry-run Verification
 
-Before enabling Renovate, verify that the `renovate.json` detects the expected dependencies:
+Run a local dry-run to confirm the `renovate.json` detects the expected packages before merging.
+
+**Check if Renovate is installed:**
 
 ```bash
-RENOVATE_TOKEN=<your-github-pat> renovate --dry-run=full <org>/<repo>
+renovate --version
 ```
 
-Check the output for:
-- Each expected package listed as a detected dependency with its current version
-- No `Error` or `matched 0 files` warnings for your `managerFilePatterns`
-- The correct `depName` and `currentValue` extracted (watch for dot-to-slash transformation in registry packages)
+- If installed → proceed to run the dry-run below.
+- If not installed → ask the user: *"Renovate is not installed. Can I install it with `npm install -g renovate`?"* Only install if the user confirms.
 
-If a package is missing, paste the actual Swift declaration into [regex101.com](https://regex101.com) with the JavaScript flavor and test the `matchStrings` pattern directly. Common culprits: multiline formatting not covered by `[\s\S]*?`, or an unhandled requirement type.
+**Run the dry-run:**
 
-> `renovate` can be installed with `npm install -g renovate`. A GitHub PAT with `repo` scope is required.
+```bash
+RENOVATE_TOKEN=<github-pat> renovate --dry-run=full <org>/<repo>
+```
+
+A GitHub PAT with `repo` scope is required. Ask the user to provide it if not already available in the environment.
+
+**What to check in the output:**
+- Each expected package appears as a detected dependency with its current version
+- No `matched 0 files` warnings for your `managerFilePatterns`
+- Registry packages show the correct transformed `depName` (e.g. `firebase/firebase-ios-sdk`, not `firebase.firebase-ios-sdk`)
+
+**If a package is missing:**
+- Paste the actual Swift declaration (including surrounding lines) into [regex101.com](https://regex101.com) using the JavaScript flavor
+- Test the failing `matchStrings` pattern directly
+- Common culprits: multiline declaration not matched by `[\s\S]*?`, unhandled requirement type (e.g. `.upToNextMinor`, `.exact`)
 
 ## Step 6 — Enable Renovate
 
