@@ -179,7 +179,7 @@ Use two managers (releases + tags) as fallback:
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
       "matchStrings": [
-        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s,]*requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-releases"
     },
@@ -187,7 +187,7 @@ Use two managers (releases + tags) as fallback:
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
       "matchStrings": [
-        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s,]*requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-tags"
     },
@@ -195,7 +195,7 @@ Use two managers (releases + tags) as fallback:
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
       "matchStrings": [
-        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s,]*requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-releases"
     },
@@ -203,7 +203,7 @@ Use two managers (releases + tags) as fallback:
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
       "matchStrings": [
-        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s,]*requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-tags"
     }
@@ -422,6 +422,7 @@ After merging:
 | No PRs created | Confirm `renovate.json` is valid JSON; check app dashboard for errors |
 | `customManagers` not matching | Test the regex against your actual Swift file at regex101.com (use JavaScript flavor) |
 | Multiline declarations not detected | Ensure `[\\s\\S]*?` is used instead of `.+?` in `matchStrings` |
+| Wrong package gets updated (e.g. LSExtensions bumped with kakao's version) | `[\\s\\S]*?` is spanning across multiple `.remote()` blocks — use `[\\s,]*` between the URL and `requirement:` to constrain the match within a single block |
 | Registry package PRs have wrong version | Override `packageName` in `packageRules` to point to the correct GitHub repo |
 | Renovate opens too many PRs at once | Add `"prConcurrentLimit": 3` to `renovate.json` |
 | Package updates break build | Add `"automerge": false` (it's the default — confirm it's not set to `true`) |
