@@ -372,8 +372,9 @@ Then create `.github/workflows/renovate.yml`:
 name: Renovate
 
 on:
-  schedule:
-    - cron: '<cron expression matching chosen schedule>'
+  # Disabled until tested — uncomment after confirming the workflow runs correctly
+  # schedule:
+  #   - cron: '<cron expression matching chosen schedule>'
   workflow_dispatch:
 
 permissions:
@@ -394,7 +395,11 @@ jobs:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
 ```
 
-**2.** Set `RENOVATE_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
+**2.** The `schedule` cron is commented out so the user can test manually first. After the workflow file is merged, ask the user to trigger it manually from the Actions tab (`workflow_dispatch`) and confirm it runs correctly.
+
+Once the user confirms it works, uncomment the `schedule` block and push the change.
+
+**3.** Set `RENOVATE_TOKEN` in GitHub repository secrets. Ask the user which token type they are using:
 
 **Fine-grained personal access token** — requires these permissions (set token lifetime to ≤ 366 days — some organizations such as `tuist` enforce this limit and will reject tokens with longer lifetimes):
 - Administration: Read-only
