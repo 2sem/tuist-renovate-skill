@@ -279,7 +279,38 @@ And these top-level options to prevent PR floods:
 }
 ```
 
-## Step 5 — Enable Renovate
+## Step 5 — Dry-run Verification
+
+Run a local dry-run to confirm the `renovate.json` detects the expected packages before merging.
+
+**Check if Renovate is installed:**
+
+```bash
+renovate --version
+```
+
+- If installed → proceed to run the dry-run below.
+- If not installed → ask the user: *"Renovate is not installed. Can I install it with `npm install -g renovate`?"* Only install if the user confirms.
+
+**Run the dry-run:**
+
+```bash
+RENOVATE_TOKEN=<github-pat> renovate --dry-run=full <org>/<repo>
+```
+
+A GitHub PAT with `repo` scope is required. Ask the user to provide it if not already available in the environment.
+
+**What to check in the output:**
+- Each expected package appears as a detected dependency with its current version
+- No `matched 0 files` warnings for your `managerFilePatterns`
+- Registry packages show the correct transformed `depName` (e.g. `firebase/firebase-ios-sdk`, not `firebase.firebase-ios-sdk`)
+
+**If a package is missing:**
+- Paste the actual Swift declaration (including surrounding lines) into [regex101.com](https://regex101.com) using the JavaScript flavor
+- Test the failing `matchStrings` pattern directly
+- Common culprits: multiline declaration not matched by `[\s\S]*?`, unhandled requirement type (e.g. `.upToNextMinor`, `.exact`)
+
+## Step 6 — Enable Renovate
 
 Choose one of the two approaches:
 
@@ -315,7 +346,7 @@ jobs:
 
 Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope).
 
-## Step 6 — Verify
+## Step 7 — Verify
 
 After merging:
 - Renovate creates a **Configure Renovate** PR (if using GitHub App) — merge it
@@ -340,5 +371,6 @@ After merging:
 - [ ] JSON is valid (no syntax errors)
 - [ ] `customManagers` regex tested against actual Swift file content (including multiline examples)
 - [ ] Branch dependencies excluded or disabled
+- [ ] `renovate --dry-run` confirms all expected packages are detected
 - [ ] Renovate GitHub App installed OR `.github/workflows/renovate.yml` created
 - [ ] `RENOVATE_TOKEN` secret set (self-hosted only)
