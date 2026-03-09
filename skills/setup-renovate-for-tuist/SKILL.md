@@ -29,9 +29,14 @@ let package = Package(
 )
 ```
 
-**Project.swift-based** — look for `packages:` arrays in `Projects/*/Project.swift`:
+**Project.swift-based** — search for `Project.swift` files anywhere in the project that contain a non-empty `packages:` array:
+
+```bash
+grep -rl "packages:" --include="Project.swift" .
+```
+
 ```swift
-// Projects/App/Project.swift
+// (location varies per project)
 let project = Project(
     packages: [
         .remote(url: "https://github.com/firebase/firebase-ios-sdk", requirement: .upToNextMajor(from: "11.8.1"))
@@ -39,7 +44,7 @@ let project = Project(
 )
 ```
 
-> A project uses one style only. If `Tuist/Package.swift` has non-empty dependencies → Tuist/Package.swift-based. If `Project.swift` files have non-empty `packages:` → Project.swift-based.
+> A project uses one style only. If `Tuist/Package.swift` has non-empty dependencies → Tuist/Package.swift-based. If any `Project.swift` file has a non-empty `packages:` array → Project.swift-based.
 
 ## Step 2 — Detect Package Format
 
