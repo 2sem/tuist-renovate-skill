@@ -368,6 +368,10 @@ on:
     - cron: '<cron expression matching chosen schedule>'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   renovate:
     runs-on: ubuntu-latest
