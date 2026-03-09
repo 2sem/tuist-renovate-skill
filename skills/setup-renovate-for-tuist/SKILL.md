@@ -396,6 +396,8 @@ jobs:
 
 **2.** Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope) if not already set.
 
+> For additional self-hosted configuration options (autodiscover, git author, PR limits, etc.), refer to the [Renovate self-hosted configuration docs](https://docs.renovatebot.com/self-hosted-configuration/). Ask the user if they need any of these before finalising the workflow.
+
 ## Step 8 — Verify
 
 After merging:
