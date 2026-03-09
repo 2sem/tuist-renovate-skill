@@ -51,6 +51,8 @@ Within the detected files, check whether packages use **URL format** or **regist
 | Registry-based | `.package(id: "firebase.firebase-ios-sdk", from: "11.8.1")` |
 | URL-based (Project.swift) | `.remote(url: "https://github.com/...", requirement: .upToNextMajor(from: "1.0.0"))` |
 
+Also note any packages using `requirement: .branch("...")` — these cannot be tracked by Renovate and should be left out (see Branch Dependencies below).
+
 ## Step 3 — Check for mise.toml
 
 Check if `mise.toml` exists in the project root. If yes, Renovate can also update tool versions (tuist, swiftlint, etc.) automatically.
@@ -83,21 +85,37 @@ The Renovate Swift manager natively handles `Package.swift` files. The default p
 
 ### Case B: Tuist/Package.swift + Registry-based packages (id: format)
 
-Renovate's Swift manager only understands `url:`-based packages. For `id:`-based registry packages, add a `customManagers` entry that extracts the package id and maps it to a GitHub datasource.
+Renovate's Swift manager only understands `url:`-based packages. For `id:`-based registry packages, use `customManagers` with a regex that:
+- Handles both `from:` and `exact:` requirements
+- Matches multiline declarations (packages formatted across multiple lines will be silently missed otherwise)
+- Transforms dot notation to slash notation for GitHub lookups (`firebase.firebase-ios-sdk` → `firebase/firebase-ios-sdk`)
+- Uses triple braces `{{{ }}}` in `packageNameTemplate` to prevent HTML-escaping the `/`
+
+Use two managers (releases + tags) as fallback since some packages only publish tags, not releases:
 
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
       "managerFilePatterns": ["/Tuist/Package\\.swift/"],
       "matchStrings": [
-        "\\.package\\(id:\\s*\"(?<depName>[^\"]+)\",\\s*from:\\s*\"(?<currentValue>[^\"]+)\""
+        "\\.package\\(id:\\s*\"(?<depName>[\\w\\-.]+?)\"[\\s\\S]*?(?:from|exact):\\s*\"(?<currentValue>[^\"]+)\"\\)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "{{{replace '\\.' '/' depName}}}"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/Tuist/Package\\.swift/"],
+      "matchStrings": [
+        "\\.package\\(id:\\s*\"(?<depName>[\\w\\-.]+?)\"[\\s\\S]*?(?:from|exact):\\s*\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-tags",
-      "packageNameTemplate": "{{replace '\\.' '/' depName}}"
+      "packageNameTemplate": "{{{replace '\\.' '/' depName}}}"
     }
   ],
   "packageRules": [
@@ -122,18 +140,48 @@ Renovate's Swift manager only understands `url:`-based packages. For `id:`-based
 
 ### Case C: Project.swift-based + URL-based packages
 
-Project.swift uses `.remote(url:)` which is a Tuist-specific syntax, not standard SPM. Renovate's Swift manager won't parse this. Use a `customManagers` regex entry:
+Project.swift uses `.remote(url:)` which is a Tuist-specific syntax, not standard SPM. Renovate's Swift manager won't parse this. The regex must:
+- Handle multiline declarations
+- Handle optional `https://` prefix and `.git` suffix
+- Cover all requirement types: `.upToNextMajor`, `.upToNextMinor`, `.exact`
+
+Use two managers (releases + tags) as fallback:
 
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/Projects/.*Project\\.swift/", "/Project\\.swift/"],
+      "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
       "matchStrings": [
-        "\\.remote\\(url:\\s*\"https://github\\.com/(?<depName>[^\"]+)\",\\s*requirement:\\s*\\.upToNextMajor\\(from:\\s*\"(?<currentValue>[^\"]+)\""
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
+      "matchStrings": [
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.(?:upToNextMajor|upToNextMinor)\\(from:\\s*\"(?<currentValue>[^\"]+)\"\\)"
+      ],
+      "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
+      "matchStrings": [
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Project\\.swift$/"],
+      "matchStrings": [
+        "\\.remote\\(url:\\s*\"(?:https?:\\/\\/)?github\\.com\\/(?<depName>[\\w\\-_]+\\/[\\w\\-_.]+?)(?:\\.git)?\"[\\s\\S]*?requirement:\\s*\\.exact\\(\"(?<currentValue>[^\"]+)\"\\)"
       ],
       "datasourceTemplate": "github-tags"
     }
@@ -152,19 +200,38 @@ Project.swift uses `.remote(url:)` which is a Tuist-specific syntax, not standar
 
 ### Case D: Mixed (URL + registry packages)
 
-Combine both `customManagers` entries from Case B and Case C as needed.
+Combine the `customManagers` entries from Case B and Case C. Set `enabledManagers` to include only the managers you use:
+
+```json
+{
+  "enabledManagers": ["custom.regex"]
+}
+```
+
+---
+
+### Branch Dependencies
+
+Packages declared with `requirement: .branch("...")` use mutable Git refs — there is no semantic version for Renovate to track. Do not add regex patterns for these. If Renovate picks them up accidentally, disable them explicitly:
+
+```json
+{
+  "matchDatasources": ["git-refs"],
+  "enabled": false
+}
+```
 
 ---
 
 ### Adding mise.toml support (optional)
 
-If `mise.toml` exists, add the `mise` manager to the extends list:
+If `mise.toml` exists, add `mise` to `enabledManagers`:
 
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["swift", "mise", "custom.regex"],
+  "enabledManagers": ["mise", "custom.regex"],
   "packageRules": [
     {
       "matchManagers": ["mise"],
@@ -176,6 +243,41 @@ If `mise.toml` exists, add the `mise` manager to the extends list:
 ```
 
 > The `mise` manager reads `mise.toml` and updates tool versions like `tuist`, `swiftlint`, etc.
+
+---
+
+### Recommended packageRules additions (optional)
+
+Consider adding these to control merge behaviour:
+
+```json
+{
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "automerge": false
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ]
+}
+```
+
+And these top-level options to prevent PR floods:
+
+```json
+{
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2
+}
+```
 
 ## Step 5 — Enable Renovate
 
@@ -225,15 +327,18 @@ After merging:
 | Issue | Fix |
 |-------|-----|
 | No PRs created | Confirm `renovate.json` is valid JSON; check app dashboard for errors |
-| `customManagers` not matching | Test the regex against your `Package.swift` at regex101.com |
+| `customManagers` not matching | Test the regex against your actual Swift file at regex101.com (use JavaScript flavor) |
+| Multiline declarations not detected | Ensure `[\\s\\S]*?` is used instead of `.+?` in `matchStrings` |
 | Registry package PRs have wrong version | Override `packageName` in `packageRules` to point to the correct GitHub repo |
 | Renovate opens too many PRs at once | Add `"prConcurrentLimit": 3` to `renovate.json` |
 | Package updates break build | Add `"automerge": false` (it's the default — confirm it's not set to `true`) |
+| Renovate scan is very slow | Add `"enabledManagers": ["custom.regex"]` to skip irrelevant built-in managers |
 
 ## Done Checklist
 
 - [ ] `renovate.json` created in project root with correct config for detected style
 - [ ] JSON is valid (no syntax errors)
-- [ ] `customManagers` regex tested against actual `Package.swift` content
+- [ ] `customManagers` regex tested against actual Swift file content (including multiline examples)
+- [ ] Branch dependencies excluded or disabled
 - [ ] Renovate GitHub App installed OR `.github/workflows/renovate.yml` created
 - [ ] `RENOVATE_TOKEN` secret set (self-hosted only)
