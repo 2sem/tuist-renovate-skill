@@ -404,6 +404,7 @@ Once the user confirms it works, uncomment the `schedule` block and push the cha
 **Fine-grained personal access token** — requires these permissions (set token lifetime to ≤ 366 days — some organizations such as `tuist` enforce this limit and will reject tokens with longer lifetimes):
 - Administration: Read-only
 - Contents: Read and write
+- Dependabot alerts: Read-only
 - Issues: Read and write
 - Metadata: Read-only (auto-granted)
 - Pull requests: Read and write
