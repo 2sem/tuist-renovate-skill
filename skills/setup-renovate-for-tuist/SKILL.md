@@ -279,7 +279,24 @@ And these top-level options to prevent PR floods:
 }
 ```
 
-## Step 5 — Enable Renovate
+## Step 5 — Dry-run Verification
+
+Before enabling Renovate, verify that the `renovate.json` detects the expected dependencies:
+
+```bash
+RENOVATE_TOKEN=<your-github-pat> renovate --dry-run=full <org>/<repo>
+```
+
+Check the output for:
+- Each expected package listed as a detected dependency with its current version
+- No `Error` or `matched 0 files` warnings for your `managerFilePatterns`
+- The correct `depName` and `currentValue` extracted (watch for dot-to-slash transformation in registry packages)
+
+If a package is missing, paste the actual Swift declaration into [regex101.com](https://regex101.com) with the JavaScript flavor and test the `matchStrings` pattern directly. Common culprits: multiline formatting not covered by `[\s\S]*?`, or an unhandled requirement type.
+
+> `renovate` can be installed with `npm install -g renovate`. A GitHub PAT with `repo` scope is required.
+
+## Step 6 — Enable Renovate
 
 Choose one of the two approaches:
 
@@ -315,7 +332,7 @@ jobs:
 
 Set `RENOVATE_TOKEN` in GitHub repository secrets (a PAT with `repo` scope).
 
-## Step 6 — Verify
+## Step 7 — Verify
 
 After merging:
 - Renovate creates a **Configure Renovate** PR (if using GitHub App) — merge it
@@ -340,5 +357,6 @@ After merging:
 - [ ] JSON is valid (no syntax errors)
 - [ ] `customManagers` regex tested against actual Swift file content (including multiline examples)
 - [ ] Branch dependencies excluded or disabled
+- [ ] `renovate --dry-run` confirms all expected packages are detected
 - [ ] Renovate GitHub App installed OR `.github/workflows/renovate.yml` created
 - [ ] `RENOVATE_TOKEN` secret set (self-hosted only)
